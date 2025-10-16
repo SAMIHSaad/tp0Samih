@@ -107,9 +107,7 @@ public class Bb implements Serializable {
 
     /**
      * Envoie la question au serveur.
-     * En attendant de l'envoyer à un LLM, le serveur fait un traitement quelconque, juste pour tester :
-     * Le traitement consiste à copier la question en minuscules et à l'entourer avec "||". Le rôle système
-     * est ajouté au début de la première réponse.
+     * Mon traitement personnel : compter le nombre de mots dans la question.
      *
      * @return null pour rester sur la même page.
      */
@@ -121,16 +119,19 @@ public class Bb implements Serializable {
             facesContext.addMessage(null, message);
             return null;
         }
-        // Entourer la réponse avec "||".
-        this.reponse = "||";
+        
+        // Mon traitement : compter le nombre de mots.
+        this.reponse = "Votre question comporte " + question.split("\s+").length + " mots.";
+        
         // Si la conversation n'a pas encore commencé, ajouter le rôle système au début de la réponse
         if (this.conversation.isEmpty()) {
             // Ajouter le rôle système au début de la réponse
-            this.reponse += roleSysteme.toUpperCase(Locale.FRENCH) + "\n";
+            if(roleSysteme != null && !roleSysteme.isEmpty()){
+                this.reponse = roleSysteme.toUpperCase(Locale.FRENCH) + "\n" + this.reponse;
+            }
             // Invalide le bouton pour changer le rôle système
             this.roleSystemeChangeable = false;
         }
-        this.reponse += question.toLowerCase(Locale.FRENCH) + "||";
         // La conversation contient l'historique des questions-réponses depuis le début.
         afficherConversation();
         return null;
@@ -161,26 +162,20 @@ public class Bb implements Serializable {
             // Génère les rôles de l'API prédéfinis
             this.listeRolesSysteme = new ArrayList<>();
             // Vous pouvez évidemment écrire ces rôles dans la langue que vous voulez.
-            String role = """
-                    You are a helpful assistant. You help the user to find the information they need.
-                    If the user type a question, you answer it.
-                    """;
+            String role = "You are a helpful assistant. You help the user to find the information they need."
+                    + " If the user type a question, you answer it.";
             // 1er argument : la valeur du rôle, 2ème argument : le libellé du rôle
             this.listeRolesSysteme.add(new SelectItem(role, "Assistant"));
 
-            role = """
-                    You are an interpreter. You translate from English to French and from French to English.
-                    If the user type a French text, you translate it into English.
-                    If the user type an English text, you translate it into French.
-                    If the text contains only one to three words, give some examples of usage of these words in English.
-                    """;
+            role = "You are an interpreter. You translate from English to French and from French to English."
+                    + " If the user type a French text, you translate it into English."
+                    + " If the user type an English text, you translate it into French."
+                    + " If the text contains only one to three words, give some examples of usage of these words in English.";
             this.listeRolesSysteme.add(new SelectItem(role, "Traducteur Anglais-Français"));
 
-            role = """
-                    Your are a travel guide. If the user type the name of a country or of a town,
-                    you tell them what are the main places to visit in the country or the town
-                    are you tell them the average price of a meal.
-                    """;
+            role = "Your are a travel guide. If the user type the name of a country or of a town,"
+                    + " you tell them what are the main places to visit in the country or the town"
+                    + " are you tell them the average price of a meal.";
             this.listeRolesSysteme.add(new SelectItem(role, "Guide touristique"));
         }
 
@@ -188,4 +183,3 @@ public class Bb implements Serializable {
     }
 
 }
-
